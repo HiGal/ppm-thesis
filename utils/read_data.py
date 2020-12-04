@@ -1,6 +1,7 @@
 from Bio import SeqIO
 import numpy as np
 import re
+from ppm_types import Alignment
 
 
 def read_fasta_alignment(filename, max_gap_fraction=1.0, header_regex=None):
@@ -55,7 +56,9 @@ def read_fasta_alignment(filename, max_gap_fraction=1.0, header_regex=None):
             Z[i][seqid] = letter2num(alphabet, c)
     assert seqid == len(seqs) - 1
 
-    return (Z.shape[0], Z.shape[1], np.max(Z), Z.T, sequence, header, _, _, _)
+    spec_id, spec_name, uniprot_id = compute_spec(header, header_regex)
+
+    return Alignment(Z.shape[0], Z.shape[1], np.max(Z), Z.T, sequence, header, spec_name, spec_id, uniprot_id)
 
 
 def letter2num(alphabet, c):
@@ -141,7 +144,9 @@ def capture_names(header_regex):
 if __name__ == '__main__':
     # alphabet = [1, 21, 2, 3, 4, 5, 6, 7, 8, 21, 9, 10, 11, 12, 21, 13, 14, 15, 16, 17, 21, 18, 19, 21, 20]
     # print(letter2num(alphabet, 'C'))
-    # read_fasta_alignment("../data/X1.fasta")
+    X1 = read_fasta_alignment("../data/X1.fasta")
+    print(X1.Z)
+    # print(read_fasta_alignment("../data/X1.fasta"))
     header = ["SOMELOCATION/SOMESPECIES/OTHERINFO"]
     answer = ([0], ['SOMESPECIES'], ['SOMELOCATION'])
 
@@ -152,6 +157,10 @@ if __name__ == '__main__':
     assert compute_spec(header, r"^(?P<id>[^/]+)/(?P<species>[^/]+)/(?P<rest>.*)") == answer
 
     header = ["SOMESPECIES/OTHERINFO/SOMELOCATION"]
-    assert compute_spec(header, r"^(?P<species>[^/]+)/([^/]+)/(?P<id>.+)") == answer
+    # assert compute_spec(header, r"^(?P<species>[^/]+)/([^/]+)/(?P<id>.+)") == answer
+    #
+    # # assert compute_spec(header, r"^([^/]+)/[^/]+/")
+    # # compute_spec(header, r"^(?<id>[^/]+)/([^/]+)/")
+    # compute_spec(header, r"^([^/]+)/(?<species>[^/]+)/")
     # header_regex = r"^(?P<id>[^\/]+)\/(?P<species>[^\/]+)\/(?P<rest>.*)"
     # print(compute_spec(header, header_regex))
